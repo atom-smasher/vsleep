@@ -2,7 +2,7 @@
 
 #######################################
 ## atom smasher's vsleep: verbose sleep
-## v1.0e 12 dec 2022
+## v1.0f 12 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -106,7 +106,7 @@ esac
 
 ## fail gracefully if the specified target is in the past
 [ 1 -gt ${delay} ] && {
-    echo "${0}: error: '${*}' is in the past"
+    echo "${0##*/}: error: '${*}' is in the past"
     exit 2
 }
 
