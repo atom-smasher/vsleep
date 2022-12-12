@@ -2,7 +2,7 @@
 
 #######################################
 ## atom smasher's vsleep: verbose sleep
-## v1.0b 12 dec 2022
+## v1.0c 12 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -85,7 +85,7 @@ shift $(( $OPTIND - 1 ))
 ## calculate a "wait until time", if needed
 ## if "DELAY|TARGET" contains non-numeric characters, process it as a TARGET
 echo "${*}" | egrep -q '[^0-9]' && {
-    delay=$(( $( date -d "${*}" +%s  ) - $( date +%s ) ))
+    delay=$(( $( date -d "${*}" +%s  ) - $( date +%s ) - 1 ))
     ## wait ; this rounds to the next second, before starting the countdown
     ## not perfect, but it tends to give much more precise execution time
     sleep 0.$(( 1000000000 - $(date +%-N) ))
@@ -101,6 +101,7 @@ echo "${*}" | egrep -q '[^0-9]' && {
 ## plus/minus jitter, if specified
 [ "${jitter_plus_minus}" ] && delay=$(( ${delay} ${jitter_plus_minus} ))
 
-## at the heart of this script is a yes/pv trick that I found here -
+## at the heart of this script is a yes/pv trick that I found here, and significantly expanded on -
 ## https://unix.stackexchange.com/questions/600868/verbose-sleep-command-that-displays-pending-time-seconds-minutes
-yes | pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_quiet} --rate-limit 1 --stop-at-size --size $(( ${delay} - 1 )) > /dev/null
+yes | pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_quiet} --rate-limit 10 --stop-at-size --size $(( ${delay} * 10 )) > /dev/null
+
