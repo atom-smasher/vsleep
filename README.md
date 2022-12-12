@@ -14,6 +14,12 @@ vsleep 21:00
 
 Target time accepts any format that's understood by date's DATE STRING. Integer-only values are interpreted as seconds of delay, and any other characters (including spaces) cause this argument to be interpreted as DATE STRING formatted target-times.
 
+Sleep for 2 hours:
+```
+vsleep 2 hours
+```
+
+
 Sleep until 9pm tomorrow:
 ```
 vsleep 21:00 tomorrow
