@@ -37,6 +37,7 @@ vsleep 3 days
 Sleep until 7pm, 1 July, 2023:
 ```
 vsleep 1 July 2023 19:00
+vsleep 2023-07-01 19:00
 ```
 
 ---
@@ -59,6 +60,9 @@ vsleep -J 300 21:00
 ```
 ---
 
-Verbosity options can be seen via the help menu:
-`vsleep -h`
+Verbose output can be supressed with the `-q` option, making this like a standard sleep command with extra functionality for interpreting target times.
 
+Other verbosity options can be seen via the help menu:
+```
+vsleep -h
+```
