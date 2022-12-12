@@ -40,6 +40,11 @@ vsleep 1 July 2023 19:00
 vsleep 2023-07-01 19:00
 ```
 
+Sleep until 7pm, 1 July, 2023, New York time, specified via epoch seconds:
+```
+TZ=America/New_York vsleep @1688252400
+```
+
 ---
 
 Time-zones can be explicitly specified. Sleep until 8am GMT:
