@@ -2,7 +2,7 @@
 
 #######################################
 ## atom smasher's vsleep: verbose sleep
-## v1.0 12 dec 2022
+## v1.0b 12 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -33,14 +33,14 @@ calc_random_jitter () {
 }
 
 ## unset these variables; they'll be set later, if needed
-unset jitter_add jitter_plus_minus progress_bar pv_qiet
+unset jitter_add jitter_plus_minus progress_bar pv_quiet
 
 ## set these variables; they'll be unset later, if needed
 pv_eta='--eta'
 pv_eta_fine='--fineta'
 
 ## getopts loop to parse options
-while getopts "hj:J:pEI" options
+while getopts "hj:J:pEIq" options
 do
     case ${options} in
 	j)
@@ -63,6 +63,9 @@ do
 	    ## disable pv's ETA
 	    unset pv_eta_fine
 	    ;;
+	q)
+	    pv_quiet='--quiet'
+	    ;;
 	h)
 	    show_help
 	    exit
@@ -77,7 +80,7 @@ shift $(( $OPTIND - 1 ))
 
 ## if pv's --eta and --fineta are both turned off, it defaults to showing progress
 ## turn that off, unless it's explicitly turned on
-[ ! "${pv_eta}" ] && [ ! "${pv_eta_fine}" ] && [ ! "${progress_bar}" ] && pv_qiet='--quiet'
+[ ! "${pv_eta}" ] && [ ! "${pv_eta_fine}" ] && [ ! "${progress_bar}" ] && pv_quiet='--quiet'
 
 ## calculate a "wait until time", if needed
 ## if "DELAY|TARGET" contains non-numeric characters, process it as a TARGET
@@ -100,4 +103,4 @@ echo "${*}" | egrep -q '[^0-9]' && {
 
 ## at the heart of this script is a yes/pv trick that I found here -
 ## https://unix.stackexchange.com/questions/600868/verbose-sleep-command-that-displays-pending-time-seconds-minutes
-yes | pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_qiet} --rate-limit 1 --stop-at-size --size $(( ${delay} - 1 )) > /dev/null
+yes | pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_quiet} --rate-limit 1 --stop-at-size --size $(( ${delay} - 1 )) > /dev/null
