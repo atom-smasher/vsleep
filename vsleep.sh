@@ -2,7 +2,7 @@
 
 #######################################
 ## atom smasher's vsleep: verbose sleep
-## v1.0c 12 dec 2022
+## v1.0d 12 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -10,7 +10,7 @@
 [ -x "$(which pv)" ] || {
     echo "${0} requires 'pv', but pv was not found in PATH"
     echo 'See: http://www.ivarch.com/programs/pv.shtml'
-    exit 1
+    exit 100
 }
 
 ## help funtion
@@ -33,7 +33,7 @@ calc_random_jitter () {
 }
 
 ## unset these variables; they'll be set later, if needed
-unset jitter_add jitter_plus_minus progress_bar pv_quiet
+unset jitter_add jitter_plus_minus progress_bar pv_quiet time_fmt
 
 ## set these variables; they'll be unset later, if needed
 pv_eta='--eta'
@@ -84,7 +84,17 @@ shift $(( $OPTIND - 1 ))
 
 ## calculate a "wait until time", if needed
 ## if "DELAY|TARGET" contains non-numeric characters, process it as a TARGET
-echo "${*}" | egrep -q '[^0-9]' && {
+
+## this case construct tests whether the delay|target argument should be treated as a delay or target
+## without forking a grep
+case "${*}"
+in
+    *[^0-9]*)
+	time_fmt=target
+    ;;
+esac
+
+[ ${time_fmt} ] && {
     delay=$(( $( date -d "${*}" +%s  ) - $( date +%s ) - 1 ))
     ## wait ; this rounds to the next second, before starting the countdown
     ## not perfect, but it tends to give much more precise execution time
@@ -93,6 +103,12 @@ echo "${*}" | egrep -q '[^0-9]' && {
     ## or else, delay equals seconds as specified as an argument
     ## if "DELAY|TARGET" contains only numeric characters, process it as a DELAY
     delay=${1}
+}
+
+## fail gracefully if the specified target is in the past
+[ 1 -gt ${delay} ] && {
+    echo "${0}: error: '${*}' is in the past"
+    exit 2
 }
 
 ## add jitter, if specified
