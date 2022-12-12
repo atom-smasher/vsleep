@@ -2,7 +2,7 @@
 
 #######################################
 ## atom smasher's vsleep: verbose sleep
-## v1.0d 12 dec 2022
+## v1.0e 12 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -82,9 +82,7 @@ shift $(( $OPTIND - 1 ))
 ## turn that off, unless it's explicitly turned on
 [ ! "${pv_eta}" ] && [ ! "${pv_eta_fine}" ] && [ ! "${progress_bar}" ] && pv_quiet='--quiet'
 
-## calculate a "wait until time", if needed
 ## if "DELAY|TARGET" contains non-numeric characters, process it as a TARGET
-
 ## this case construct tests whether the delay|target argument should be treated as a delay or target
 ## without forking a grep
 case "${*}"
@@ -95,6 +93,7 @@ in
 esac
 
 [ ${time_fmt} ] && {
+    ## calculate a "wait until time", if needed
     delay=$(( $( date -d "${*}" +%s  ) - $( date +%s ) - 1 ))
     ## wait ; this rounds to the next second, before starting the countdown
     ## not perfect, but it tends to give much more precise execution time
