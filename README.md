@@ -1,5 +1,5 @@
 # vsleep
-## verbose cli sleep command, with extra features
+## verbose sleep command, with extra features
 
 Like normal unix/linux/BSD sleep, sleep for 5 minutes:
 `vsleep 300`
