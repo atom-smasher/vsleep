@@ -77,3 +77,6 @@ Other verbosity options can be seen via the help menu:
 ```
 vsleep -h
 ```
+---
+
+Timing accuracy tends to be in the realm of 10-50mS, on my laptop. Close enough for anything that I intend to use it for.
