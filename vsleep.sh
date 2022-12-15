@@ -2,7 +2,8 @@
 
 #######################################
 ## atom smasher's vsleep: verbose sleep
-## v1.0f 12 dec 2022
+## v1.0  12 dec 2022
+## v1.0h 15 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -88,26 +89,21 @@ shift $(( $OPTIND - 1 ))
 case "${*}"
 in
     *[^0-9]*)
-	time_fmt=target
+	time_fmt='target'
     ;;
 esac
 
-[ ${time_fmt} ] && {
+[ 'target' = "${time_fmt}" ] && {
     ## calculate a "wait until time", if needed
     delay=$(( $( date -d "${*}" +%s  ) - $( date +%s ) - 1 ))
-    ## wait ; this rounds to the next second, before starting the countdown
+    ## wait ; this waits until the next clock second, before starting the countdown
     ## not perfect, but it tends to give much more precise execution time
-    sleep 0.$(( 1000000000 - $(date +%-N) ))
+    ## this also seems to be a necessary evil, to get pv to display the correct ETA
+    sleep $( printf "0.%0.9d" $(( 1000000000 - $(date +%-N) )) )
 } || {
     ## or else, delay equals seconds as specified as an argument
     ## if "DELAY|TARGET" contains only numeric characters, process it as a DELAY
     delay=${1}
-}
-
-## fail gracefully if the specified target is in the past
-[ 1 -gt ${delay} ] && {
-    echo "${0##*/}: error: '${*}' is in the past"
-    exit 2
 }
 
 ## add jitter, if specified
@@ -116,7 +112,12 @@ esac
 ## plus/minus jitter, if specified
 [ "${jitter_plus_minus}" ] && delay=$(( ${delay} ${jitter_plus_minus} ))
 
+## fail gracefully if the specified target is in the past
+[ 1 -gt ${delay} ] && {
+    echo "${0##*/}: error: '${*}' is in the past"
+    exit 2
+}
+
 ## at the heart of this script is a yes/pv trick that I found here, and significantly expanded on -
 ## https://unix.stackexchange.com/questions/600868/verbose-sleep-command-that-displays-pending-time-seconds-minutes
 yes | pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_quiet} --rate-limit 10 --stop-at-size --size $(( ${delay} * 10 )) > /dev/null
-
