@@ -3,7 +3,7 @@
 #######################################
 ## atom smasher's vsleep: verbose sleep
 ## v1.0  12 dec 2022
-## v1.0h 17 dec 2022
+## v1.0i 17 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
