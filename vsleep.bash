@@ -4,7 +4,7 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0k-bash 17 dec 2022
+## v1.0m-bash 17 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -36,7 +36,8 @@ show_help () {
 
 ## jitter function
 calc_random_jitter () {
-    shuf -i 1-${1} -n 1
+    ## with bash, this can do a good enough job of picking a random number, within a range, without a fork
+    echo $(( ${EPOCHREALTIME//./} % $(( ${1} + 1 )) ))
 }
 
 test_jitter_integer () {
