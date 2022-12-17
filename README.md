@@ -79,4 +79,7 @@ vsleep -h
 ```
 ---
 
-Timing accuracy tends to be in the realm of 10-50mS, on my laptop. Close enough for anything that I intend to use it for.
+### Notes
+* Timing accuracy tends to be in the realm of 10-50mS, on my laptop. Close enough for anything that I intend to use it for.
+* There's a `bash` and `sh` version. They each do the same thing.
+
