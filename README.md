@@ -53,7 +53,7 @@ TZ=America/New_York vsleep @1688252400
 
 ---
 
-Time-zones can be explicitly specified. Sleep until 8am GMT:
+A time-zones can be explicitly specified via the TZ environment variable. Sleep until 8am GMT:
 ```
 TZ=GMT vsleep 08:00
 ```
