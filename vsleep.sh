@@ -3,7 +3,7 @@
 #######################################
 ## atom smasher's vsleep: verbose sleep
 ## v1.0  12 dec 2022
-## v1.0i 17 dec 2022
+## v1.0j 17 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -83,28 +83,28 @@ do
 	h)
 	    show_help 0
 	    ;;
-	?)
+	*)
 	    show_help 1
 	    ;;
     esac
 done
 shift $(( $OPTIND - 1 ))
 
-## test for empty DELAY|TARGET
-[ 1 -gt ${#*} ] && {
-    echo "${0##*/}: error: DELAY|TARGET must be specified"
-    show_help 4
-}
-
 ## if pv's --eta and --fineta are both turned off, it defaults to showing progress
 ## turn that off, unless it's explicitly turned on
 [ ! "${pv_eta}" ] && [ ! "${pv_eta_fine}" ] && [ ! "${progress_bar}" ] && pv_quiet='--quiet'
 
 ## if "DELAY|TARGET" contains non-numeric characters, process it as a TARGET
-## this case construct tests whether the delay|target argument should be treated as a delay or target
-## without forking a grep
+## this case construct tests whether the DELAY|TARGET argument should be treated as a DELAY or TARGET
+## without forking a grep, and simultaneously handling/processing input
 case "${*}" in
+    '')
+	## test for empty DELAY|TARGET
+	echo "${0##*/}: error: DELAY|TARGET must be specified"
+	show_help 4
+	;;
     *[!0-9]*)
+	## test for non-numeric input, including spaces
 	## santity check, if TARGET is valid
 	## here, fork 'date' to interpret the TARGET, and store that in a variable so it can be re-used without another fork
 	target_date=$( date -d "${*}" +%s 2> /dev/null ) || {
@@ -120,6 +120,7 @@ case "${*}" in
 	sleep $( printf "0.%0.9d" $(( 1000000000 - $(date +%-N) )) )
 	;;
     *)
+	## after the tests above, input must be an integer
 	## here, $delay just equals the seconds, as specified as input
 	delay=${1}
 	;;
