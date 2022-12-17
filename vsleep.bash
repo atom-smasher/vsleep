@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 #######################################
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0j 17 dec 2022
+## v1.0j-bash 17 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -117,11 +117,11 @@ case "${*}" in
 	    show_help 2
 	}
 	## calculate a "wait until time"
-	delay=$(( ${target_date} - $( date +%s ) - 1 ))
+	delay=$(( ${target_date} - ${EPOCHSECONDS} - 1 ))
 	## wait ; this waits until the next clock second, before starting the countdown
 	## not ideal, but it tends to give much more precise execution time
 	## this also seems to be a necessary evil, to get pv to display the correct ETA
-	sleep $( printf "0.%0.9d" $(( 1000000000 - $(date +%-N) )) ) 2> /dev/null || delay=$(( ${delay} + 1 ))
+	sleep $( printf "0.%0.6d" $(( 1000000 - ${EPOCHREALTIME##*.} )) ) 2> /dev/null || delay=$(( ${delay} + 1 ))
 	## on systems that can't handle 'sleep' for non-integer values, just ignore that part
 	;;
     *)
@@ -146,4 +146,3 @@ esac
 ## at the heart of this script is a yes/pv trick that I found here, and significantly expanded on -
 ## https://unix.stackexchange.com/questions/600868/verbose-sleep-command-that-displays-pending-time-seconds-minutes
 yes | pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_quiet} --rate-limit 10 --stop-at-size --size $(( ${delay} * 10 )) > /dev/null
-
