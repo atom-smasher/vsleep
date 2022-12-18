@@ -10,6 +10,8 @@ vsleep 300
 Also acepts a time to sleep until. Sleep until 9pm:
 ```
 vsleep 21:00
+vsleep 9 pm
+vsleep 9pm
 ```
 
 Target time accepts any format that's understood by date's DATE STRING. Integer-only values are interpreted as seconds of delay, and any other characters (including spaces) cause this argument to be interpreted as DATE STRING formatted target-times.
