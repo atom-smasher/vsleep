@@ -4,7 +4,7 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0q-bash 21 dec 2022
+## v1.0r-bash 21 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -26,7 +26,7 @@ show_help () {
     echo '    TARGET = sleep until this time (formats supported by DATE STRING)'
     echo '    -j JITTER = randomly add up to JITTER seconds to the DELAY or TARGET time'
     echo '    -J JITTER = randomly add or subtract up to JITTER seconds to or from the DELAY or TARGET time'
-    echo '      * JITTER must be specified as an integer'
+    echo '        * JITTER must be specified as an integer > 0'
     echo '    -d ; show JITTER times'
     echo '    -p ; show progress bar (off by default)      (pv option --progress)'
     echo '    -E ; disable countdown timer (on by default) (pv option --eta)'
@@ -150,8 +150,10 @@ esac
 
 ## fail gracefully if the specified target is in the past
 [ 1 -gt ${delay} ] && {
-    echo "${0##*/}: error: '${*}' is in the past"
-    exit 2
+    echo "${0##*/}: error: \"${delay}\" (${*}${jitter_add:+ + }${jitter_add}${jitter_plus_minus:+ + }${jitter_plus_minus}) is in the past"
+    ## this is an error condition
+    ## the exit code 1 makes it easy to distinguish from other errors, eg: [ "${?}" -lt 1 ]
+    exit 1
 }
 
 ## show JITTER times
