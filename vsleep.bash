@@ -45,7 +45,7 @@ calc_random_jitter () {
 test_jitter_integer () {
     case "${1}" in
 	*[!0-9]*)
-	    echo "${0##*/}: error: '${*}' JITTER must be specified as an integer < 0"
+	    echo "${0##*/}: error: '${*}' JITTER must be specified as an integer > 0"
 	    show_help 3
 	    ;;
     esac
