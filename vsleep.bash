@@ -4,7 +4,7 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0n-bash 21 dec 2022
+## v1.0o-bash 21 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -37,13 +37,15 @@ show_help () {
 ## jitter function
 calc_random_jitter () {
     ## with bash, this can do a good enough job of picking a random number, within a range, without a fork
-    echo $(( ${EPOCHREALTIME//./} % $(( ${1} + 1 )) ))
+    range_max=${1}
+    range_min=${2:-0}
+    echo $(( ${EPOCHREALTIME//./} % ( ${range_max} + ${range_min} + 1 ) - ${range_min} ))
 }
 
 test_jitter_integer () {
     case "${1}" in
 	*[!0-9]*)
-	    echo "${0##*/}: error: '${*}' JITTER must be specified as an integer"
+	    echo "${0##*/}: error: '${*}' JITTER must be specified as an integer < 0"
 	    show_help 3
 	    ;;
     esac
@@ -68,7 +70,7 @@ do
 	J)
 	    ## specify a random delay, plus or minus specified delay/target
 	    test_jitter_integer ${OPTARG}
-   	    jitter_plus_minus=$(tr -dc '+-' < /dev/urandom | head -c 1 ; calc_random_jitter ${OPTARG})
+   	    jitter_plus_minus=$(calc_random_jitter ${OPTARG} ${OPTARG})
 	    ;;
 	p)
 	    ## enable pv's progress bar
@@ -136,7 +138,7 @@ esac
 [ "${jitter_add}" ] && delay=$(( ${delay} + ${jitter_add} ))
 
 ## plus/minus jitter, if specified
-[ "${jitter_plus_minus}" ] && delay=$(( ${delay} ${jitter_plus_minus} ))
+[ "${jitter_plus_minus}" ] && delay=$(( ${delay} + ${jitter_plus_minus} ))
 
 ## fail gracefully if the specified target is in the past
 [ 1 -gt ${delay} ] && {
