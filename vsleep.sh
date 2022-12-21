@@ -4,7 +4,7 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0n 21 dec 2022
+## v1.0o-sh 21 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -27,10 +27,11 @@ show_help () {
     echo '    -j JITTER = randomly add up to JITTER seconds to the DELAY or TARGET time'
     echo '    -J JITTER = randomly add or subtract up to JITTER seconds to or from the DELAY or TARGET time'
     echo '      * JITTER must be specified as an integer'
-    echo '    -p = show progress bar (off by default)      (pv option --progress)'
-    echo '    -E = disable countdown timer (on by default) (pv option --eta)'
-    echo '    -I = disable ETA time (on by default)        (pv option --fineta)'
-    echo '    -q = no output from pv                       (pv option --quiet)'
+    echo '    -d ; show JITTER times'
+    echo '    -p ; show progress bar (off by default)      (pv option --progress)'
+    echo '    -E ; disable countdown timer (on by default) (pv option --eta)'
+    echo '    -I ; disable ETA time (on by default)        (pv option --fineta)'
+    echo '    -q ; no output from pv                       (pv option --quiet)'
     exit ${1}
 }
 
@@ -51,14 +52,14 @@ test_jitter_integer () {
 }
 
 ## unset these variables; they'll be set later, if needed
-unset jitter_add jitter_plus_minus progress_bar pv_quiet target_date
+unset jitter_add jitter_plus_minus progress_bar pv_quiet target_date jitter_show
 
 ## set these variables; they'll be unset later, if needed
 pv_eta='--eta'
 pv_eta_fine='--fineta'
 
 ## getopts loop to parse options
-while getopts "hj:J:pEIq" options
+while getopts "hj:J:pEIqd" options
 do
     case ${options} in
 	j)
@@ -84,12 +85,19 @@ do
 	    unset pv_eta_fine
 	    ;;
 	q)
+	    ## quiet
 	    pv_quiet='--quiet'
 	    ;;
 	h)
+	    ## help
 	    show_help 0
 	    ;;
+	d)
+	    ## debug; display JITTER times
+	    jitter_show=y
+	    ;;
 	*)
+	    ## error
 	    show_help 1
 	    ;;
     esac
@@ -143,6 +151,11 @@ esac
 [ 1 -gt ${delay} ] && {
     echo "${0##*/}: error: '${*}' is in the past"
     exit 2
+}
+
+## show JITTER times
+[ "${jitter_show}" ] && {
+    echo "JITTER (j + J):    ${jitter_add:-0} + ${jitter_plus_minus:-0} = "$(( ${jitter_add:-0} + ${jitter_plus_minus:-0} ))
 }
 
 ## at the heart of this script is a yes/pv trick that I found here, and significantly expanded on -
