@@ -4,12 +4,11 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0r-bash 21 dec 2022
+## v1.0s-bash 24 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
 ## quick sanity check, to see if "pv" is installed
-#[ -x "$(which pv)" ] || {
 command -v pv > /dev/null || type pv > /dev/null || which pv > /dev/null || {
 	## portability! first try "command -v"; if needed, try "type"; if needed, try "which"
 	## this test succeeds on the first match, avoiding a fork to which
@@ -37,10 +36,10 @@ show_help () {
 
 ## jitter function
 calc_random_jitter () {
-    ## with bash, this can do a good enough job of picking a random number, within a range, without a fork
+    ## pure bash PRNG with a "full" range of (0-2**63)-1, or 0-9223372036854775807
     range_max=${1}
     range_min=${2:-0}
-    echo $(( ${EPOCHREALTIME//./} % ( ${range_max} + ${range_min} + 1 ) - ${range_min} ))
+    echo $(( ( ( ( ( ${RANDOM} << 12 ^ ${RANDOM} ) << 12 ^ ${RANDOM} ) << 12 ^ ${RANDOM} ) << 12 ^ ${RANDOM} ) % ( ${range_max} + ${range_min} + 1 ) - ${range_min} ))
 }
 
 test_jitter_integer () {
@@ -132,7 +131,7 @@ case "${*}" in
 	## wait ; this waits until the next clock second, before starting the countdown
 	## not ideal, but it tends to give much more precise execution time
 	## this also seems to be a necessary evil, to get pv to display the correct ETA
-	sleep $( printf "0.%0.6d" $(( 1000000 - ${EPOCHREALTIME##*.} )) ) 2> /dev/null || delay=$(( ${delay} + 1 ))
+	sleep $( printf "0.%0.6d" $(( 1000000 - 10#${EPOCHREALTIME##*.} )) ) 2> /dev/null || delay=$(( ${delay} + 1 ))
 	## on systems that can't handle 'sleep' for non-integer values, just ignore that part
 	;;
     *)
