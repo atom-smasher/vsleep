@@ -4,7 +4,7 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0q-sh 24 dec 2022
+## v1.0r-sh 24 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -131,7 +131,7 @@ case "${*}" in
 	## wait ; this waits until the next clock second, before starting the countdown
 	## not ideal, but it tends to give much more precise execution time
 	## this also seems to be a necessary evil, to get pv to display the correct ETA
-	sleep $( printf "0.%0.9d" $(( 1000000000 - 10#$(date +%N) )) ) 2> /dev/null || delay=$(( ${delay} + 1 ))
+	sleep $( printf "0.%0.9d" $(( 1000000000 - $(date +%-N) )) ) 2> /dev/null || delay=$(( ${delay} + 1 ))
 	## on systems that can't handle 'sleep' for non-integer values, just ignore that part
 	;;
     *)
