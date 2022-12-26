@@ -4,15 +4,12 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0r-sh 24 dec 2022
+## v1.0s-sh 24 dec 2022
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
 ## quick sanity check, to see if "pv" is installed
-#[ -x "$(which pv)" ] || {
-command -v pv > /dev/null || type pv > /dev/null || which pv > /dev/null || {
-	## portability! first try "command -v"; if needed, try "type"; if needed, try "which"
-	## this test succeeds on the first match, avoiding a fork to which
+: | pv -q 2> /dev/null || {
 	echo "${0} requires 'pv', but pv was not found in PATH"
 	echo 'See: http://www.ivarch.com/programs/pv.shtml'
 	exit 100
