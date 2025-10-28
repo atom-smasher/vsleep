@@ -4,13 +4,13 @@
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
 ## v1.0  12 dec 2022
-## v1.0t-bash 26 dec 2022
+## v1.0u-bash 29 oct 2025
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
 ## quick sanity check, to see if "pv" is installed
 : | pv -q 2> /dev/null || {
-	echo "${0} requires 'pv', but pv was not found in PATH"
+	echo "${0} requires 'pv', but pv was not found"
 	echo 'See: http://www.ivarch.com/programs/pv.shtml'
 	exit 100
 }
@@ -25,6 +25,7 @@ show_help () {
     echo '    -J JITTER = randomly add or subtract up to JITTER seconds to or from the DELAY or TARGET time'
     echo '        * JITTER must be specified as an integer > 0'
     echo '    -d ; show JITTER times'
+    echo '    -f n ; flash the screen, n times'
     echo '    -p ; show progress bar (off by default)      (pv option --progress)'
     echo '    -E ; disable countdown timer (on by default) (pv option --eta)'
     echo '    -I ; disable ETA time (on by default)        (pv option --fineta)'
@@ -50,14 +51,14 @@ test_jitter_integer () {
 }
 
 ## unset these variables; they'll be set later, if needed
-unset jitter_add jitter_plus_minus progress_bar pv_quiet target_date jitter_show
+unset jitter_add jitter_plus_minus progress_bar pv_quiet target_date jitter_show visual_bell
 
 ## set these variables; they'll be unset later, if needed
 pv_eta='--eta'
 pv_eta_fine='--fineta'
 
 ## getopts loop to parse options
-while getopts "hj:J:pEIqd" options
+while getopts "hj:J:pEIqdf:" options
 do
     case ${options} in
 	j)
@@ -89,6 +90,10 @@ do
 	d)
 	    ## debug; display JITTER times
 	    jitter_show=y
+	    ;;
+	f)
+	    ## visual bell
+	    visual_bell=${OPTARG}
 	    ;;
 	h)
 	    ## help
@@ -161,3 +166,11 @@ esac
 ## at the heart of this script is a yes/pv trick that I found here, and significantly expanded on -
 ## https://unix.stackexchange.com/questions/600868/verbose-sleep-command-that-displays-pending-time-seconds-minutes
 pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_quiet} --rate-limit 10 --stop-at-size --size $(( ${delay} * 10 )) /dev/zero > /dev/null
+
+## flash the screen, using the visual bell
+visual_bell=${visual_bell:=0}
+while [ ${visual_bell} -gt 0 ]
+do
+    tput flash
+    : $(( visual_bell-- ))
+done
