@@ -3,8 +3,8 @@
 #######################################
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
-## v1.0      12 dec 2022
-## v2.0-bash 07 dec 2025
+## v1.0       12 dec 2022
+## v2.01-bash 07 dec 2025
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
 
@@ -174,7 +174,6 @@ unset line_seperator
 clear_line="$(tput el)"
 
 ## the countdown loop
-stty -echo
 while :
 do
     time_remaining=$(( ${time_completion} - $(printf '%(%s)T' -1) ))
@@ -193,12 +192,12 @@ do
 	time_eta=${time_completion_short}
     }
     ## print the line, unless "quiet"
-    [ "${quiet}" ] || {
-	echo -ne "${clear_line}\t${timer_countdown}${line_seperator}${time_eta}\r"
-    }
+    ## `read -t 1` serves the purpose of `sleep 1`, without a fork.
     ## at first glance, a `sleep 1` in a timer loop may seem like it's inviting a timing error, but
-    ## it's really just updating the display and checking when it's done. it's not controlling the timing.
-    sleep 1
+    ## it's really just updating the display. it's not controlling the timing.
+    [ "${quiet}" ] || {
+	read -t 1 -s -p "$(echo -ne "${clear_line}\t${timer_countdown}${line_seperator}${time_eta}\r")"
+    }
     ## exit the loop cleanly when done
     [ ${time_remaining} -lt 2 ] && {
 	## final update of the status line
@@ -207,7 +206,6 @@ do
 	break
     }
 done
-stty echo
 
 ## flash the screen, using the visual bell
 ## beep using system bell
