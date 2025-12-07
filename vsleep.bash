@@ -3,17 +3,10 @@
 #######################################
 ## atom smasher's vsleep: verbose sleep
 ## https://github.com/atom-smasher/vsleep
-## v1.0  12 dec 2022
-## v1.0v-bash 09 nov 2025
+## v1.0      12 dec 2022
+## v2.0-bash 07 dec 2025
 ## Distributed under the GNU General Public License
 ## http://www.gnu.org/copyleft/gpl.html
-
-## quick sanity check, to see if "pv" is installed
-: | pv -q 2> /dev/null || {
-	echo "${0} requires 'pv', but pv was not found"
-	echo 'See: http://www.ivarch.com/programs/pv.shtml'
-	exit 100
-}
 
 ## help funtion
 show_help () {
@@ -27,12 +20,16 @@ show_help () {
     echo '    -d ; show JITTER times'
     echo '    -b n ; ring the system bell, n times'
     echo '    -f n ; flash the screen, n times (visual bell)'
-    echo '    -p ; show progress bar (off by default)      (pv option --progress)'
-    echo '    -E ; disable countdown timer (on by default) (pv option --eta)'
-    echo '    -I ; disable ETA time (on by default)        (pv option --fineta)'
-    echo '    -q ; no output from pv                       (pv option --quiet)'
+    echo '    -E ; disable countdown timer (on by default)' # derived from: pv option --eta
+    echo '    -I ; disable ETA time (on by default)'        # derived from: pv option --fineta
+    echo '    -q ; quiet'                                   # derived from: pv option --quiet
     exit ${1}
 }
+
+stty_orig=$(stty -g)
+
+trap "stty ${stty_orig}" EXIT
+trap "echo ; exit" INT KILL TERM
 
 ## jitter function
 calc_random_jitter () {
@@ -52,14 +49,14 @@ test_jitter_integer () {
 }
 
 ## unset these variables; they'll be set later, if needed
-unset jitter_add jitter_plus_minus progress_bar pv_quiet target_date jitter_show visual_bell system_bell
+unset jitter_add jitter_plus_minus quiet target_date jitter_show visual_bell system_bell timer_seperator time_completion
 
 ## set these variables; they'll be unset later, if needed
-pv_eta='--eta'
-pv_eta_fine='--fineta'
+show_eta='y'
+show_eta_fine='y'
 
 ## getopts loop to parse options
-while getopts "hj:J:pEIqdb:f:" options
+while getopts "hj:J:EIqdb:f:" options
 do
     case ${options} in
 	j)
@@ -72,28 +69,24 @@ do
 	    test_jitter_integer ${OPTARG}
    	    jitter_plus_minus=$(calc_random_jitter ${OPTARG} ${OPTARG})
 	    ;;
-	p)
-	    ## enable pv's progress bar
-	    progress_bar='-p'
-	    ;;
 	E)
-	    ## disable pv's countdown timer
-	    unset pv_eta
+	    ## disable countdown timer
+	    unset show_eta
 	    ;;
 	I)
-	    ## disable pv's ETA
-	    unset pv_eta_fine
+	    ## disable ETA
+	    unset show_eta_fine
 	    ;;
 	q)
 	    ## quiet
-	    pv_quiet='--quiet'
+	    quiet='y'
 	    ;;
 	d)
 	    ## debug; display JITTER times
 	    jitter_show=y
 	    ;;
         b)
-            ## system bell                                                                                                                                                                                                              
+            ## system bell
             system_bell=${OPTARG}
             ;;
 	f)
@@ -106,15 +99,13 @@ do
 	    ;;
 	*)
 	    ## error
-	    show_help 1
+	    show_help 2
 	    ;;
     esac
 done
 shift $(( $OPTIND - 1 ))
 
-## if pv's --eta and --fineta are both turned off, it defaults to showing progress
-## turn that off, unless it's explicitly turned on
-[ ! "${pv_eta}" ] && [ ! "${pv_eta_fine}" ] && [ ! "${progress_bar}" ] && pv_quiet='--quiet'
+[ ! "${show_eta}" ] && [ ! "${show_eta_fine}" ] && quiet='y'
 
 ## if "DELAY|TARGET" contains non-numeric characters, process it as a TARGET
 ## this case construct tests whether the DELAY|TARGET argument should be treated as a DELAY or TARGET
@@ -138,7 +129,7 @@ case "${*}" in
 	delay=$(( ${target_date} - ${EPOCHSECONDS} - 1 ))
 	## wait ; this waits until the next clock second, before starting the countdown
 	## not ideal, but it tends to give much more precise execution time
-	## this also seems to be a necessary evil, to get pv to display the correct ETA
+	## the math here is kind of 2-1, rather than 1-0, to avoid problems with leading zero being misinterpreted
 	sleep $( printf "0.%0.6d" $(( 1000000 - 10#${EPOCHREALTIME##*.} )) ) 2> /dev/null || delay=$(( ${delay} + 1 ))
 	## on systems that can't handle 'sleep' for non-integer values, just ignore that part
 	;;
@@ -168,26 +159,73 @@ esac
     echo "JITTER (j + J):    ${jitter_add:-0} + ${jitter_plus_minus:-0} = "$(( ${jitter_add:-0} + ${jitter_plus_minus:-0} ))
 }
 
-## at the heart of this script is a yes/pv trick that I found here, and significantly expanded on -
-## https://unix.stackexchange.com/questions/600868/verbose-sleep-command-that-displays-pending-time-seconds-minutes
-pv ${progress_bar} ${pv_eta} ${pv_eta_fine} ${pv_quiet} --rate-limit 10 --stop-at-size --size $(( ${delay} * 10 )) /dev/zero > /dev/null
+## borrowing from pv: "When the  estimated  time  is more than 6 hours in the future, the date is shown as well."
+time_completion=$(( ${EPOCHSECONDS} + ${delay} ))
+[ "${show_eta_fine}" ] && [ "${delay}" -gt 21600 ] && time_completion_long=$(printf 'ETA %(%Y-%m-%d %H:%M:%S)T' ${time_completion})
+[ "${show_eta_fine}" ] && time_completion_short=$(printf 'ETA %(%H:%M:%S)T' ${time_completion})
+
+## formatting delimiter
+[ "${show_eta}" ] && [ "${show_eta_fine}" ] && timer_seperator=' :: '
+
+## display a "::" seperator, if needed
+unset line_seperator
+[ "${show_eta}" ] && [ "${show_eta_fine}" ] && line_seperator=" :: "
+
+clear_line="$(tput el)"
+
+## the countdown loop
+stty -echo
+while :
+do
+    time_remaining=$(( ${time_completion} - $(printf '%(%s)T' -1) ))
+    [ ! "${quiet}" ] && [ "${show_eta}" ] && {
+	counter=$( TZ=UTC printf '%(%H:%M:%S)T' ${time_remaining} )
+        ## format the countdown timer to remove leading zeros
+	timer_countdown=$(( ${time_remaining} / 3600 / 24 ))":${counter}"
+	timer_countdown="${timer_countdown#0:}"  ## trim 0 days
+        timer_countdown="${timer_countdown#00:}" ## trim 00 hours
+        timer_countdown="${timer_countdown#00:}" ## trim 00 minutes
+    }
+    [ "${show_eta_fine}" ] && [ "${time_remaining}" -gt 21600 ] && {
+	## ETA includes date when it's 6+ hours away
+	time_eta=${time_completion_long}
+    } || {
+	time_eta=${time_completion_short}
+    }
+    ## print the line, unless "quiet"
+    [ "${quiet}" ] || {
+	echo -ne "${clear_line}\t${timer_countdown}${line_seperator}${time_eta}\r"
+    }
+    ## at first glance, a `sleep 1` in a timer loop may seem like it's inviting a timing error, but
+    ## it's really just updating the display and checking when it's done. it's not controlling the timing.
+    sleep 1
+    ## exit the loop cleanly when done
+    [ ${time_remaining} -lt 2 ] && {
+	## final update of the status line
+	[ "${quiet}" ] || echo -e "${clear_line}\t${timer_countdown:+0}${line_seperator}${time_eta}"
+	## done with the countdown
+	break
+    }
+done
+stty echo
 
 ## flash the screen, using the visual bell
+## beep using system bell
 visual_bell=${visual_bell:=0}
 system_bell=${system_bell:=0}
 while [ ${visual_bell} -gt 0 ] || [ ${system_bell} -gt 0 ]
 do
     ## system bell, with appropriate delay
     [ ${system_bell} -gt 0 ] && {
-        tput bel && sleep 0.1
+	tput bel && sleep 0.1
     } || {
-        sleep 0.1
+	sleep 0.1
     }
     ## visual bell, with appropriate delay
     [ ${visual_bell} -gt 0 ] && {
-        tput flash
+	tput flash
     } || {
-        sleep 0.1
+	sleep 0.1
     }
     ## countdown bells to zero
     visual_bell=$(( ${visual_bell} - 1 ))
